@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CrewMatch Test v2</title>
+<title>CrewMatch Test v3</title>
 <style>
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;background:#071021;color:white;padding:22px}
 .card{background:#121a2d;border:1px solid #27324a;border-radius:24px;padding:20px;margin:16px 0}
@@ -11,89 +11,215 @@ input,button{width:100%;padding:14px;border-radius:14px;border:0;margin-top:10px
 button{background:#4f7df3;color:white;font-weight:800}
 .stat{background:#0b1224;border-radius:18px;padding:18px;margin:10px 0}
 .green{color:#22c55e}.yellow{color:#f59e0b}.red{color:#ef4444}.muted{color:#9aa4b2}
-.big{font-size:38px;font-weight:900}.pill{display:inline-block;background:#1f2a44;border-radius:999px;padding:7px 12px;margin:4px 0}
+.big{font-size:38px;font-weight:900}
+.pill{display:inline-block;background:#1f2a44;border-radius:999px;padding:7px 12px;margin:4px 0}
 </style>
 </head>
 <body>
-<h1>✈️ CrewMatch Test v2</h1>
-<p class="muted">Laboratorio seguro de nuevas funciones.</p>
+
+<h1>✈️ CrewMatch Test v3</h1>
+<p class="muted">Prueba segura con fecha de referencia.</p>
 
 <div class="card">
-<h3>Rol 1</h3><input id="file1" type="file" accept=".ics">
-<h3>Rol 2</h3><input id="file2" type="file" accept=".ics">
+<h3>Fecha de referencia</h3>
+<input id="refDate" type="date" value="2026-07-01">
+
+<h3>Rol 1</h3>
+<input id="file1" type="file" accept=".ics">
+
+<h3>Rol 2</h3>
+<input id="file2" type="file" accept=".ics">
+
 <button onclick="analyze()">Analizar</button>
 </div>
 
 <div id="out"></div>
 
 <script>
-function read(id){return new Promise((res,rej)=>{let f=document.getElementById(id).files[0];if(!f)return rej("Falta subir ambos roles");let r=new FileReader();r.onload=()=>res(r.result);r.readAsText(f)})}
-function clean(t){return t.replace(/\r\n[ \t]/g,"").replace(/\n[ \t]/g,"")}
-function get(b,k){let m=b.match(new RegExp(k+"(?:;[^:]*)?:(.*)"));return m?m[1].trim():""}
-function parseDate(v){if(!v)return null;v=v.replace("Z","");if(v.length===8)return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8));return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),+v.slice(9,11),+v.slice(11,13))}
+function read(id){
+ return new Promise((res,rej)=>{
+  let f=document.getElementById(id).files[0];
+  if(!f)return rej("Falta subir ambos roles");
+  let r=new FileReader();
+  r.onload=()=>res(r.result);
+  r.readAsText(f);
+ });
+}
+
+function clean(t){
+ return t.replace(/\r\n[ \t]/g,"").replace(/\n[ \t]/g,"");
+}
+
+function get(b,k){
+ let m=b.match(new RegExp(k+"(?:;[^:]*)?:(.*)"));
+ return m?m[1].trim():"";
+}
+
+function parseDate(v){
+ if(!v)return null;
+ v=v.replace("Z","");
+ if(v.length===8)return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8));
+ return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),+v.slice(9,11),+v.slice(11,13));
+}
+
 function parseICS(t){
  t=clean(t);
  return [...t.matchAll(/BEGIN:VEVENT([\s\S]*?)END:VEVENT/g)].map(m=>{
-  let b=m[1], s=get(b,"SUMMARY"), st=parseDate(get(b,"DTSTART")), en=parseDate(get(b,"DTEND"));
+  let b=m[1];
+  let s=get(b,"SUMMARY");
+  let st=parseDate(get(b,"DTSTART"));
+  let en=parseDate(get(b,"DTEND"));
   let type="OTHER";
-  if(s.startsWith("DO")||s.startsWith("DR"))type="OFF";
-  if(s.startsWith("Report time")||s.startsWith("HSB")||s==="B - LIM"||s.startsWith("B "))type="BUSY";
-  if(type==="BUSY"&&(!en||en<=st)){en=new Date(st);en.setDate(en.getDate()+1)}
-  return{summary:s,start:st,end:en,type}
- }).filter(e=>e.start)
+
+  if(s.startsWith("DO")||s.startsWith("DR")) type="OFF";
+  if(s.startsWith("Report time")||s.startsWith("HSB")||s==="B - LIM"||s.startsWith("B ")) type="BUSY";
+
+  if(type==="BUSY"&&(!en||en<=st)){
+   en=new Date(st);
+   en.setDate(en.getDate()+1);
+  }
+
+  return{summary:s,start:st,end:en,type};
+ }).filter(e=>e.start);
 }
-function busy(e){return e.filter(x=>x.type==="BUSY"&&x.end).map(x=>({start:x.start,end:x.end}))}
-function overlap(b,a,z){return b.some(x=>x.start<z&&x.end>a)}
-function free(b1,b2,a,z){return !overlap(b1,a,z)&&!overlap(b2,a,z)}
-function hm(ms){let h=Math.floor(ms/3600000),m=Math.round((ms%3600000)/60000);return h+"h "+m+"m"}
-function key(d){return d.toISOString().slice(0,10)}
-function label(score){if(score>=70)return["🟢","Muy buen mes","green"];if(score>=45)return["🟡","Mes normal","yellow"];return["🔴","Mes difícil","red"]}
+
+function busy(e){
+ return e.filter(x=>x.type==="BUSY"&&x.end).map(x=>({start:x.start,end:x.end}));
+}
+
+function overlap(b,a,z){
+ return b.some(x=>x.start<z&&x.end>a);
+}
+
+function free(b1,b2,a,z){
+ return !overlap(b1,a,z)&&!overlap(b2,a,z);
+}
+
+function hm(ms){
+ let h=Math.floor(ms/3600000);
+ let m=Math.round((ms%3600000)/60000);
+ return h+"h "+m+"m";
+}
+
+function key(d){
+ return d.toISOString().slice(0,10);
+}
+
+function scoreLabel(score){
+ if(score>=70)return["🟢","Muy buen mes","green"];
+ if(score>=45)return["🟡","Mes normal","yellow"];
+ return["🔴","Mes difícil","red"];
+}
+
+function recommendation(hours){
+ if(hours>=23)return"⭐⭐⭐⭐⭐ Día completo ideal";
+ if(hours>=12)return"⭐⭐⭐⭐ Muy buena ventana";
+ if(hours>=6)return"⭐⭐⭐ Buena opción";
+ if(hours>=2)return"⭐⭐ Ventana corta";
+ return"⭐ Difícil";
+}
+
 async function analyze(){
  try{
   let [t1,t2]=await Promise.all([read("file1"),read("file2")]);
-  let e1=parseICS(t1),e2=parseICS(t2),b1=busy(e1),b2=busy(e2);
-  let all=e1.concat(e2).map(e=>e.start), min=new Date(Math.min(...all));min.setDate(1);min.setHours(0,0,0,0);
+  let ref=document.getElementById("refDate").value;
+  let refDate=ref?new Date(ref+"T00:00:00"):new Date();
+
+  let e1=parseICS(t1);
+  let e2=parseICS(t2);
+  let b1=busy(e1);
+  let b2=busy(e2);
+
+  let all=e1.concat(e2).map(e=>e.start);
+  let min=new Date(Math.min(...all));
+  min.setDate(1);min.setHours(0,0,0,0);
   let max=new Date(min.getFullYear(),min.getMonth()+1,1);
-  let full=[],good=[],total=0,nights=0,cur=[],best=[];
+
+  let full=[], good=[], total=0, nights=0, cur=[], best=[];
+  let next=null;
+
   for(let d=new Date(min);d<max;d.setDate(d.getDate()+1)){
-    let a=new Date(d),z=new Date(d);z.setDate(z.getDate()+1);
-    let freeMs=0, step=3600000;
-    for(let t=+a;t<+z;t+=step){if(free(b1,b2,new Date(t),new Date(t+step)))freeMs+=step}
-    total+=freeMs;
-    let ns=new Date(a);ns.setHours(20,0,0,0);let ne=new Date(a);ne.setDate(ne.getDate()+1);ne.setHours(8,0,0,0);
-    let nightH=0;for(let t=+ns;t<+ne;t+=step){if(free(b1,b2,new Date(t),new Date(t+step)))nightH++}
-    if(nightH>=5)nights++;
-    if(freeMs>=23*3600000){full.push(key(a));cur.push(key(a));if(cur.length>best.length)best=[...cur]}
-    else{cur=[];if(freeMs>=6*3600000)good.push(key(a)+" · "+hm(freeMs))}
+   let a=new Date(d);
+   let z=new Date(d);
+   z.setDate(z.getDate()+1);
+
+   let freeMs=0;
+   let step=3600000;
+
+   for(let t=+a;t<+z;t+=step){
+    if(free(b1,b2,new Date(t),new Date(t+step))) freeMs+=step;
+   }
+
+   total+=freeMs;
+
+   let ns=new Date(a);ns.setHours(20,0,0,0);
+   let ne=new Date(a);ne.setDate(ne.getDate()+1);ne.setHours(8,0,0,0);
+   let nightH=0;
+
+   for(let t=+ns;t<+ne;t+=step){
+    if(free(b1,b2,new Date(t),new Date(t+step))) nightH++;
+   }
+
+   if(nightH>=5)nights++;
+
+   let item={date:key(a),hours:freeMs/3600000,freeMs};
+
+   if(freeMs>=23*3600000){
+    full.push(item);
+    cur.push(item);
+    if(cur.length>best.length)best=[...cur];
+   }else{
+    cur=[];
+    if(freeMs>=6*3600000)good.push(item);
+   }
+
+   if(!next && a>=refDate && freeMs>=2*3600000){
+    next=item;
+   }
   }
-  let days=Math.max(1,Math.round((max-min)/86400000)), score=Math.round(total/(days*86400000)*100), q=label(score);
+
+  let days=Math.max(1,Math.round((max-min)/86400000));
+  let score=Math.round(total/(days*86400000)*100);
+  let q=scoreLabel(score);
+
   out.innerHTML=`
   <div class="card">
     <div class="big">${q[0]} ${score}%</div>
     <h2 class="${q[2]}">${q[1]}</h2>
     <p class="muted">Calidad estimada del mes</p>
   </div>
+
   <div class="card">
     <h2>❤️ Próxima cita</h2>
-    <p class="green">${full[0]||good[0]||"No encontrada"}</p>
-    <span class="pill">Próxima mejor oportunidad</span>
+    <p class="green">${next?next.date:"No encontrada"}</p>
+    <p>${next?hm(next.freeMs)+" · "+recommendation(next.hours):"No hay ventana desde la fecha elegida."}</p>
+    <span class="pill">Desde ${key(refDate)}</span>
   </div>
+
   <div class="card">
     <h2>🏖️ Escapada ideal</h2>
-    <p class="green">${best.length?best[0]+" al "+best[best.length-1]:"No encontrada"}</p>
+    <p class="green">${best.length?best[0].date+" al "+best[best.length-1].date:"No encontrada"}</p>
     <p>${best.length>=4?"⭐⭐⭐⭐⭐ Perfecta para viajar":best.length>=2?"⭐⭐⭐ Buena opción":"⭐ Bloque corto"}</p>
   </div>
+
   <div class="card">
     <h2>Resumen</h2>
     <div class="stat"><b>${full.length}</b><br>Días libres completos</div>
     <div class="stat"><b>${nights}</b><br>Noches útiles</div>
     <div class="stat"><b>${hm(total)}</b><br>Horas juntos</div>
   </div>
+
   <div class="card">
-    <h2>✅ Días completos</h2><p>${full.join("<br>")||"—"}</p>
-    <h2>🟡 Buenas ventanas</h2><p>${good.join("<br>")||"—"}</p>
-  </div>`;
- }catch(e){alert(e)}
+    <h2>✅ Días completos</h2>
+    <p>${full.map(x=>x.date).join("<br>")||"—"}</p>
+
+    <h2>🟡 Buenas ventanas</h2>
+    <p>${good.map(x=>x.date+" · "+hm(x.freeMs)).join("<br>")||"—"}</p>
+  </div>
+  `;
+ }catch(e){
+  alert(e);
+ }
 }
 </script>
 </body>
