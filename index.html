@@ -3,279 +3,162 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CrewMatch v1.1</title>
+<title>CrewMatch v1.2</title>
 <style>
-:root{
-  --bg:#071021;--card:#121a2d;--card2:#0b1224;--text:#f8fafc;
-  --muted:#9aa4b2;--line:#27324a;--blue:#4f7df3;--green:#22c55e;
-  --yellow:#f59e0b;--red:#ef4444;--purple:#a855f7;
-}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#071021,#0b1020);color:var(--text)}
-.app{max-width:980px;margin:auto;padding:24px}
-h1{font-size:42px;margin:10px 0}
-.sub{color:var(--muted);font-size:18px;margin-bottom:22px}
+:root{--bg:#071021;--card:#121a2d;--card2:#0b1224;--text:#f8fafc;--muted:#9aa4b2;--line:#27324a;--blue:#4f7df3;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--purple:#a855f7}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#071021,#0b1020);color:var(--text)}
+.app{max-width:980px;margin:auto;padding:24px}h1{font-size:42px;margin:10px 0}.sub{color:var(--muted);font-size:18px;margin-bottom:22px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;margin:16px 0;box-shadow:0 20px 50px #0005}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-input{width:100%;padding:14px;margin-top:8px;border-radius:14px;border:1px solid var(--line);background:var(--card2);color:var(--text)}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mode button{background:var(--card2);border:1px solid var(--line);text-align:left;font-size:18px}
+.mode button.active{border-color:var(--blue);background:#172554}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}input{width:100%;padding:14px;margin-top:8px;border-radius:14px;border:1px solid var(--line);background:var(--card2);color:var(--text)}
 button{width:100%;padding:16px;border:0;border-radius:16px;background:var(--blue);color:white;font-weight:800;font-size:16px;margin-top:18px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
-.stat{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:18px}
-.stat b{font-size:28px;display:block}
-.stat span{color:var(--muted);font-size:13px}
-.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.day{min-height:96px;border:1px solid var(--line);border-radius:16px;padding:10px;background:var(--card2)}
-.day b{font-size:18px}
-.ok{border-color:var(--green);background:linear-gradient(#052e1a,#0b1224)}
-.mid{border-color:var(--yellow);background:linear-gradient(#3b2505,#0b1224)}
-.bad{border-color:var(--red);background:linear-gradient(#3b0a0a,#0b1224)}
-.tag{display:inline-block;margin-top:8px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#1f2a44}
-.small{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
-table{width:100%;border-collapse:collapse;background:var(--card2);border-radius:18px;overflow:hidden}
-th,td{padding:10px;border-bottom:1px solid var(--line);font-size:13px;text-align:left;vertical-align:top}
-th{background:#18233d}
-@media(max-width:800px){.grid,.stats{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(2,1fr)}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.stat{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:18px}.stat b{font-size:28px;display:block}.stat span{color:var(--muted);font-size:13px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day{min-height:96px;border:1px solid var(--line);border-radius:16px;padding:10px;background:var(--card2)}.day b{font-size:18px}
+.ok{border-color:var(--green);background:linear-gradient(#052e1a,#0b1224)}.mid{border-color:var(--yellow);background:linear-gradient(#3b2505,#0b1224)}.bad{border-color:var(--red);background:linear-gradient(#3b0a0a,#0b1224)}
+.tag{display:inline-block;margin-top:8px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#1f2a44}.small{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
+.person{background:var(--card2);border:1px solid var(--line);padding:14px;border-radius:16px;margin:10px 0}
+@media(max-width:800px){.grid,.stats,.mode{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>✈️ CrewMatch</h1>
-  <div class="sub">Compara dos roles .ICS y descubre cuándo realmente coinciden libres.</div>
+<h1>✈️ CrewMatch</h1>
+<div class="sub">Encuentra cuándo coinciden libres: con tu pareja o con tu grupo.</div>
 
-  <div class="card">
-    <div class="grid">
-      <div>
-        <h2>Rol 1</h2>
-        <input id="name1" value="Diego">
-        <input id="file1" type="file" accept=".ics,text/calendar">
-      </div>
-      <div>
-        <h2>Rol 2</h2>
-        <input id="name2" value="Diana">
-        <input id="file2" type="file" accept=".ics,text/calendar">
-      </div>
-    </div>
-    <button onclick="analyze()">Analizar roles</button>
+<div class="card">
+  <h2>¿Cómo quieres comparar?</h2>
+  <div class="mode">
+    <button id="btnCouple" class="active" onclick="setMode('couple')">❤️ Modo Pareja<br><span class="small">Para ti y tu enamorada</span></button>
+    <button id="btnGroup" onclick="setMode('group')">👥 Modo Grupo<br><span class="small">Para amigos o crew</span></button>
   </div>
+</div>
 
-  <div id="out"></div>
+<div id="coupleBox" class="card">
+  <div class="grid">
+    <div><h2>Rol 1</h2><input id="name1" value="Diego"><input id="file1" type="file" accept=".ics,text/calendar"></div>
+    <div><h2>Rol 2</h2><input id="name2" value="Diana"><input id="file2" type="file" accept=".ics,text/calendar"></div>
+  </div>
+  <button onclick="analyzeCouple()">Analizar pareja</button>
+</div>
+
+<div id="groupBox" class="card" style="display:none">
+  <h2>Grupo / amigos</h2>
+  <p class="small">Versión inicial: sube varios roles .ics. Busca días donde todos estén libres.</p>
+  <input id="groupFiles" type="file" accept=".ics,text/calendar" multiple>
+  <button onclick="analyzeGroup()">Analizar grupo</button>
+</div>
+
+<div id="out"></div>
 </div>
 
 <script>
-let rows=[];
-
-function unfoldICS(s){
-  return s.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');
+let mode="couple";
+function setMode(m){
+  mode=m;
+  btnCouple.classList.toggle("active",m==="couple");
+  btnGroup.classList.toggle("active",m==="group");
+  coupleBox.style.display=m==="couple"?"block":"none";
+  groupBox.style.display=m==="group"?"block":"none";
+  out.innerHTML="";
 }
-
-function getLine(block,key){
-  const m=block.match(new RegExp(key+"(?:;[^:]*)?:(.*)"));
-  return m?m[1].trim():"";
-}
-
-function parseDate(v){
-  if(!v)return null;
-  v=v.replace("Z","");
-  if(v.length===8){
-    return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),0,0);
-  }
-  return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),+v.slice(9,11),+v.slice(11,13));
-}
-
+function unfoldICS(s){return s.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'')}
+function getLine(block,key){const m=block.match(new RegExp(key+"(?:;[^:]*)?:(.*)"));return m?m[1].trim():""}
+function parseDate(v){if(!v)return null;v=v.replace("Z","");if(v.length===8)return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),0,0);return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),+v.slice(9,11),+v.slice(11,13))}
 function parseICS(txt){
-  txt=unfoldICS(txt);
-  return [...txt.matchAll(/BEGIN:VEVENT([\s\S]*?)END:VEVENT/g)].map(m=>{
-    const block=m[1];
-    const summary=getLine(block,"SUMMARY");
-    const desc=getLine(block,"DESCRIPTION");
-    const start=parseDate(getLine(block,"DTSTART"));
-    const end=parseDate(getLine(block,"DTEND"));
-    let type="FLIGHT";
-    if(summary.startsWith("DO")||summary.startsWith("DR")) type="OFF";
-    else if(summary.startsWith("HSB")) type="STBY";
-    else if(summary==="B - LIM"||summary.startsWith("B ")) type="BLANK";
-    else if(summary.startsWith("Report time")) type="DUTY";
-    return {summary,desc,start,end,type};
-  }).filter(e=>e.start);
+ txt=unfoldICS(txt);
+ return [...txt.matchAll(/BEGIN:VEVENT([\s\S]*?)END:VEVENT/g)].map(m=>{
+  const block=m[1],summary=getLine(block,"SUMMARY"),desc=getLine(block,"DESCRIPTION"),start=parseDate(getLine(block,"DTSTART")),end=parseDate(getLine(block,"DTEND"));
+  let type="FLIGHT";
+  if(summary.startsWith("DO")||summary.startsWith("DR"))type="OFF";
+  else if(summary.startsWith("HSB"))type="STBY";
+  else if(summary==="B - LIM"||summary.startsWith("B "))type="BLANK";
+  else if(summary.startsWith("Report time"))type="DUTY";
+  return{summary,desc,start,end,type};
+ }).filter(e=>e.start);
 }
-
 function busy(events){
-  let result=[];
-  for(const e of events){
-    if(e.type==="OFF"||e.type==="FLIGHT") continue;
-    let end=e.end;
-    if(!end||end<=e.start){
-      end=new Date(e.start);
-      if((e.summary+e.desc).includes("23:59")) end.setHours(23,59,0,0);
-      else end.setDate(end.getDate()+1);
-    }
-    result.push({...e,end});
-  }
-  result.sort((a,b)=>a.start-b.start);
-  let merged=[];
-  for(const x of result){
-    if(!merged.length||x.start>merged[merged.length-1].end) merged.push({...x});
-    else if(x.end>merged[merged.length-1].end) merged[merged.length-1].end=x.end;
-  }
-  return merged;
+ let result=[];
+ for(const e of events){
+  if(e.type==="OFF"||e.type==="FLIGHT")continue;
+  let end=e.end;
+  if(!end||end<=e.start){end=new Date(e.start);if((e.summary+e.desc).includes("23:59"))end.setHours(23,59,0,0);else end.setDate(end.getDate()+1)}
+  result.push({...e,end});
+ }
+ result.sort((a,b)=>a.start-b.start);
+ let merged=[];
+ for(const x of result){if(!merged.length||x.start>merged[merged.length-1].end)merged.push({...x});else if(x.end>merged[merged.length-1].end)merged[merged.length-1].end=x.end}
+ return merged;
 }
-
-function readFile(id){
-  return new Promise((resolve,reject)=>{
-    const file=document.getElementById(id).files[0];
-    if(!file) reject("Falta subir un archivo .ics");
-    const reader=new FileReader();
-    reader.onload=()=>resolve(reader.result);
-    reader.readAsText(file);
-  });
+function readFileInput(id){return new Promise((res,rej)=>{const f=document.getElementById(id).files[0];if(!f)rej("Falta subir un archivo .ics");const r=new FileReader();r.onload=()=>res(r.result);r.readAsText(f)})}
+function readFileObj(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>res({name:f.name,text:r.result});r.readAsText(f)})}
+function overlap(busy,a,b){return busy.some(x=>x.start<b&&x.end>a)}
+function freeWindows(allBusy,a,b){
+ let points=[+a,+b];
+ allBusy.flat().forEach(x=>{if(x.end>a&&x.start<b){points.push(Math.max(+x.start,+a));points.push(Math.min(+x.end,+b))}});
+ points=[...new Set(points)].sort((a,b)=>a-b).map(x=>new Date(x));
+ let wins=[];
+ for(let i=0;i<points.length-1;i++){
+  if(allBusy.every(bb=>!overlap(bb,points[i],points[i+1])))wins.push({s:points[i],e:points[i+1]});
+ }
+ return wins.filter(w=>w.e-w.s>=60*60000);
 }
-
-function overlap(busy,a,b){
-  return busy.some(x=>x.start<b&&x.end>a);
+function hm(ms){const h=Math.floor(ms/3600000),m=Math.round((ms%3600000)/60000);return `${h}h ${m}m`}
+function fmt(d){return d.toLocaleString("es-PE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false})}
+function dateMonth(events){const dates=events.flat().map(e=>e.start);const min=new Date(Math.min(...dates));min.setDate(1);min.setHours(0,0,0,0);const max=new Date(min.getFullYear(),min.getMonth()+1,1);return{min,max}}
+function bestStreak(rows){let best=[],cur=[];for(const r of rows){if(r.kind==="full"){cur.push(r);if(cur.length>best.length)best=[...cur]}else cur=[]}return best}
+function render(rows,total,nights,title,extra=""){
+ const full=rows.filter(r=>r.kind==="full"),good=rows.filter(r=>r.kind==="good"),streak=bestStreak(rows);
+ const compatibility=Math.round(total/(rows.length*24*3600000)*100);
+ out.innerHTML=`
+ <div class="stats">
+  <div class="stat"><b>${compatibility}%</b><span>${title}</span></div>
+  <div class="stat"><b>${full.length}</b><span>Días full</span></div>
+  <div class="stat"><b>${nights}</b><span>Noches útiles</span></div>
+  <div class="stat"><b>${hm(total)}</b><span>Horas coincidentes</span></div>
+ </div>
+ <div class="card">
+  <h2>Resumen</h2>
+  ${extra}
+  <p><b>Días completos libres:</b><br>${full.map(r=>r.date).join("<br>")||"—"}</p>
+  <p><b>Buenas ventanas:</b><br>${good.map(r=>r.date+" · "+r.free).join("<br>")||"—"}</p>
+  <p><b>Mejor bloque:</b><br>${streak.length?streak[0].date+" al "+streak[streak.length-1].date:"—"}</p>
+ </div>
+ <div class="card"><h2>Calendario</h2><div class="calendar">
+ ${rows.map(r=>`<div class="day ${r.kind==="full"?"ok":r.kind==="good"?"mid":r.kind==="hard"?"bad":""}">
+ <b>${r.n}</b><br><span class="tag">${r.kind==="full"?"Libre":r.kind==="good"?"Buena ventana":r.kind==="short"?"Corto":"Difícil"}</span>
+ <div class="small">${r.free}<br>${r.night?"🌙 Noche útil":"—"}</div></div>`).join("")}
+ </div></div>`;
 }
-
-function freeWindows(b1,b2,a,b){
-  let points=[+a,+b];
-  [...b1,...b2].forEach(x=>{
-    if(x.end>a&&x.start<b){
-      points.push(Math.max(+x.start,+a));
-      points.push(Math.min(+x.end,+b));
-    }
-  });
-  points=[...new Set(points)].sort((a,b)=>a-b).map(x=>new Date(x));
-  let wins=[];
-  for(let i=0;i<points.length-1;i++){
-    if(!overlap(b1,points[i],points[i+1])&&!overlap(b2,points[i],points[i+1])){
-      wins.push({s:points[i],e:points[i+1]});
-    }
-  }
-  return wins.filter(w=>w.e-w.s>=60*60000);
+async function analyzeCouple(){
+ const [t1,t2]=await Promise.all([readFileInput("file1"),readFileInput("file2")]);
+ const e1=parseICS(t1),e2=parseICS(t2),b1=busy(e1),b2=busy(e2),{min,max}=dateMonth([e1,e2]);
+ let rows=[],total=0,nights=0;
+ for(let d=new Date(min);d<max;d.setDate(d.getDate()+1)){
+  const a=new Date(d),b=new Date(d);b.setDate(b.getDate()+1);
+  const wins=freeWindows([b1,b2],a,b),ms=wins.reduce((s,w)=>s+w.e-w.s,0);total+=ms;
+  const ns=new Date(a);ns.setHours(20,0,0,0);const ne=new Date(a);ne.setDate(ne.getDate()+1);ne.setHours(8,0,0,0);
+  const night=freeWindows([b1,b2],ns,ne).reduce((s,w)=>s+w.e-w.s,0)>=5*3600000;if(night)nights++;
+  const kind=ms>=23.5*3600000?"full":ms>=6*3600000?"good":ms>=2*3600000?"short":"hard";
+  rows.push({date:a.toISOString().slice(0,10),n:a.getDate(),free:hm(ms),ms,night,kind});
+ }
+ render(rows,total,nights,"Couple Score",`<p class="small">Modo Pareja ❤️</p>`);
 }
-
-function hm(ms){
-  const h=Math.floor(ms/3600000);
-  const m=Math.round((ms%3600000)/60000);
-  return `${h}h ${m}m`;
-}
-
-function fmt(d){
-  return d.toLocaleString("es-PE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false});
-}
-
-function dutyText(busy,a,b){
-  return busy.filter(x=>x.start<b&&x.end>a)
-    .map(x=>x.summary.replace("Report time:","Rpt").replace("Debrief Time:","Deb"))
-    .join(" / ") || "Libre";
-}
-
-function bestStreak(rows){
-  let best=[],cur=[];
-  for(const r of rows){
-    if(r.kind==="full"){cur.push(r);if(cur.length>best.length)best=[...cur];}
-    else cur=[];
-  }
-  return best;
-}
-
-async function analyze(){
-  try{
-    const [t1,t2]=await Promise.all([readFile("file1"),readFile("file2")]);
-    const n1=document.getElementById("name1").value||"Rol 1";
-    const n2=document.getElementById("name2").value||"Rol 2";
-
-    const e1=parseICS(t1), e2=parseICS(t2);
-    const b1=busy(e1), b2=busy(e2);
-
-    const dates=e1.concat(e2).map(e=>e.start);
-    const min=new Date(Math.min(...dates));
-    min.setDate(1);min.setHours(0,0,0,0);
-    const max=new Date(min.getFullYear(),min.getMonth()+1,1);
-
-    rows=[];
-    let total=0,nights=0;
-
-    for(let d=new Date(min);d<max;d.setDate(d.getDate()+1)){
-      const a=new Date(d);
-      const b=new Date(d);b.setDate(b.getDate()+1);
-
-      const wins=freeWindows(b1,b2,a,b);
-      const ms=wins.reduce((s,w)=>s+(w.e-w.s),0);
-      total+=ms;
-
-      const ns=new Date(a);ns.setHours(20,0,0,0);
-      const ne=new Date(a);ne.setDate(ne.getDate()+1);ne.setHours(8,0,0,0);
-      const nightMs=freeWindows(b1,b2,ns,ne).reduce((s,w)=>s+(w.e-w.s),0);
-      const night=nightMs>=5*3600000;
-      if(night)nights++;
-
-      let kind=ms>=23.5*3600000?"full":ms>=6*3600000?"good":ms>=2*3600000?"short":"hard";
-
-      rows.push({
-        date:a.toISOString().slice(0,10),
-        n:a.getDate(),
-        free:hm(ms),
-        ms,
-        night,
-        kind,
-        r1:dutyText(b1,a,b),
-        r2:dutyText(b2,a,b),
-        wins:wins.map(w=>`${fmt(w.s)} - ${fmt(w.e)}`).join(" | ")
-      });
-    }
-
-    const full=rows.filter(r=>r.kind==="full");
-    const good=rows.filter(r=>r.kind==="good");
-    const streak=bestStreak(rows);
-    const compatibility=Math.round(total/(max-min)*100);
-
-    document.getElementById("out").innerHTML=`
-      <div class="stats">
-        <div class="stat"><b>${compatibility}%</b><span>Couple Score</span></div>
-        <div class="stat"><b>${full.length}</b><span>Días libres juntos</span></div>
-        <div class="stat"><b>${nights}</b><span>Noches útiles</span></div>
-        <div class="stat"><b>${hm(total)}</b><span>Horas libres juntos</span></div>
-      </div>
-
-      <div class="card">
-        <h2>Resumen</h2>
-        <p><b>Días completos libres:</b><br>${full.map(r=>r.date).join("<br>")||"—"}</p>
-        <p><b>Buenas ventanas:</b><br>${good.map(r=>r.date+" · "+r.free).join("<br>")||"—"}</p>
-        <p><b>Mejor bloque:</b><br>${streak.length?streak[0].date+" al "+streak[streak.length-1].date:"—"}</p>
-        <p class="small">Los pernoctes se consideran ocupados desde reporte hasta debrief, incluso si cruzan de día.</p>
-      </div>
-
-      <div class="card">
-        <h2>Calendario</h2>
-        <div class="calendar">
-          ${rows.map(r=>`
-            <div class="day ${r.kind==="full"?"ok":r.kind==="good"?"mid":r.kind==="hard"?"bad":""}">
-              <b>${r.n}</b><br>
-              <span class="tag">${r.kind==="full"?"Libre juntos":r.kind==="good"?"Buena ventana":r.kind==="short"?"Corto":"Difícil"}</span>
-              <div class="small">${r.free}<br>${r.night?"🌙 Noche útil":"—"}</div>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Detalle diario</h2>
-        <table>
-          <tr><th>Fecha</th><th>${n1}</th><th>${n2}</th><th>Libre juntos</th><th>Ventanas</th></tr>
-          ${rows.map(r=>`
-            <tr>
-              <td>${r.date}</td>
-              <td>${r.r1}</td>
-              <td>${r.r2}</td>
-              <td>${r.free}</td>
-              <td>${r.wins||"—"}</td>
-            </tr>
-          `).join("")}
-        </table>
-      </div>
-    `;
-  }catch(err){
-    alert(err);
-  }
+async function analyzeGroup(){
+ const files=[...document.getElementById("groupFiles").files];
+ if(files.length<2){alert("Sube al menos 2 roles .ics");return}
+ const loaded=await Promise.all(files.map(readFileObj));
+ const events=loaded.map(x=>parseICS(x.text)), busies=events.map(busy), {min,max}=dateMonth(events);
+ let rows=[],total=0,nights=0;
+ for(let d=new Date(min);d<max;d.setDate(d.getDate()+1)){
+  const a=new Date(d),b=new Date(d);b.setDate(b.getDate()+1);
+  const wins=freeWindows(busies,a,b),ms=wins.reduce((s,w)=>s+w.e-w.s,0);total+=ms;
+  const ns=new Date(a);ns.setHours(20,0,0,0);const ne=new Date(a);ne.setDate(ne.getDate()+1);ne.setHours(8,0,0,0);
+  const night=freeWindows(busies,ns,ne).reduce((s,w)=>s+w.e-w.s,0)>=5*3600000;if(night)nights++;
+  const kind=ms>=23.5*3600000?"full":ms>=6*3600000?"good":ms>=2*3600000?"short":"hard";
+  rows.push({date:a.toISOString().slice(0,10),n:a.getDate(),free:hm(ms),ms,night,kind});
+ }
+ render(rows,total,nights,"Group Score",`<p><b>Integrantes:</b> ${files.length}</p><p class="small">Modo Grupo 👥: calcula cuándo todos coinciden libres.</p>`);
 }
 </script>
 </body>
