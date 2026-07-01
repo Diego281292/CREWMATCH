@@ -1,10 +1,8 @@
+import { analyzeSchedules } from "./analyzer.js";
+
 console.log("CrewMatch v2 iniciado");
 
-const dashboard = document.getElementById("dashboard");
+const result = analyzeSchedules({}, {});
+console.log(result);
 
-if (dashboard) {
-  dashboard.innerHTML = `
-    <p>✅ CrewMatch v2 cargó correctamente.</p>
-    <p>Próximo paso: conectar lectura de archivos .ics.</p>
-  `;
-}
+const dashboard = document.getElementById("dashboard");
