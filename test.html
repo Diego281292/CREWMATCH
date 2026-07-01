@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CrewMatch Test</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;background:#071021;color:white;padding:22px}
+.card{background:#121a2d;border:1px solid #27324a;border-radius:22px;padding:18px;margin:14px 0}
+input,button{width:100%;padding:14px;border-radius:14px;border:0;margin-top:10px}
+button{background:#4f7df3;color:white;font-weight:800}
+.stat{background:#0b1224;border-radius:16px;padding:16px;margin:10px 0}
+.good{color:#22c55e}.mid{color:#f59e0b}.bad{color:#ef4444}
+</style>
+</head>
+<body>
+
+<h1>✈️ CrewMatch Test</h1>
+<p>Prueba segura sin tocar la app principal.</p>
+
+<div class="card">
+  <h3>Rol 1</h3>
+  <input id="file1" type="file" accept=".ics">
+  <h3>Rol 2</h3>
+  <input id="file2" type="file" accept=".ics">
+  <button onclick="analyze()">Analizar</button>
+</div>
+
+<div id="out"></div>
+
+<script>
+function read(id){
+  return new Promise((res,rej)=>{
+    const f=document.getElementById(id).files[0];
+    if(!f)return rej("Falta subir ambos roles");
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.readAsText(f);
+  });
+}
+
+function cleanICS(t){
+  return t.replace(/\r\n[ \t]/g,"").replace(/\n[ \t]/g,"");
+}
+
+function parseDate(v){
+  if(!v)return null;
+  v=v.replace("Z","");
+  if(v.length===8)return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),0,0);
+  return new Date(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),+v.slice(9,11),+v.slice(11,13));
+}
+
+function get(block,key){
+  const m=block.match(new RegExp(key+"(?:;[^:]*)?:(.*)"));
+  return m?m[1].trim():"";
+}
+
+function parseICS(text){
+  text=cleanICS(text);
+  return [...text.matchAll(/BEGIN:VEVENT([\s\S]*?)END:VEVENT/g)].map(m=>{
+    const b=m[1];
+    const summary=get(b,"SUMMARY");
+    const start=parseDate(get(b,"DTSTART"));
+    let end=parseDate(get(b,"DTEND"));
+    let type="BUSY";
+
+    if(summary.startsWith("DO")||summary.startsWith("DR")) type="OFF";
+    if(summary.startsWith("Report time")) type="DUTY";
+    if(summary.startsWith("HSB")||summary.startsWith("B ")) type="DUTY";
+
+    if(type==="DUTY" && (!end || end<=start)){
+      end=new Date(start);
+      end.setDate(end.getDate()+1);
+    }
+
+    return {summary,start,end,type};
+  }).filter(e=>e.start);
+}
+
+function busy(events){
+  return events.filter(e=>e.type==="DUTY" && e.end).map(e=>({start:e.start,end:e.end}));
+}
+
+function overlap(b,a,z){
+  return b.some(x=>x.start<z && x.end>a);
+}
+
+function freeBoth(b1,b2,a,z){
+  return !overlap(b1,a,z) && !overlap(b2,a,z);
+}
+
+function hm(ms){
+  if(!isFinite(ms)||ms<0)return "0h";
+  const h=Math.floor(ms/3600000);
+  const m=Math.round((ms%3600000)/60000);
+  return `${h}h ${m}m`;
+}
+
+function dateKey(d){
+  return d.toISOString().slice(0,10);
+}
+
+async function analyze(){
+  try{
+    const [t1,t2]=await Promise.all([read("file1"),read("file2")]);
+    const e1=parseICS(t1), e2=parseICS(t2);
+
+    if(!e1.length || !e2.length){
+      out.innerHTML="<div class='card bad'>No se pudieron leer eventos.</div>";
+      return;
+    }
+
+    const b1=busy(e1), b2=busy(e2);
+    const all=e1.concat(e2).map(e=>e.start);
+    const min=new Date(Math.min(...all));
+    min.setDate(1); min.setHours(0,0,0,0);
+    const max=new Date(min.getFullYear(),min.getMonth()+1,1);
+
+    let full=[], good=[], total=0, current=[], best=[];
+
+    for(let d=new Date(min); d<max; d.setDate(d.getDate()+1)){
+      const a=new Date(d);
+      const z=new Date(d);
+      z.setDate(z.getDate()+1);
+
+      let freeMs=0;
+      const step=60*60*1000;
+
+      for(let t=+a; t<+z; t+=step){
+        const s=new Date(t);
+        const e=new Date(t+step);
+        if(freeBoth(b1,b2,s,e)) freeMs+=step;
+      }
+
+      total+=freeMs;
+
+      if(freeMs>=23*3600000){
+        full.push(dateKey(a));
+        current.push(dateKey(a));
+        if(current.length>best.length) best=[...current];
+      }else{
+        current=[];
+        if(freeMs>=6*3600000) good.push(`${dateKey(a)} · ${hm(freeMs)}`);
+      }
+    }
+
+    const days=Math.max(1,Math.round((max-min)/(24*3600000)));
+    const score=Math.round((total/(days*24*3600000))*100);
+
+    out.innerHTML=`
+      <div class="card">
+        <h2>Resultado Test</h2>
+        <div class="stat"><b>${score}%</b><br>Compatibilidad</div>
+        <div class="stat"><b>${full.length}</b><br>Días libres completos</div>
+        <div class="stat"><b>${hm(total)}</b><br>Horas libres juntos</div>
+      </div>
+
+      <div class="card">
+        <h3>📅 Próximo día libre juntos</h3>
+        <p class="good">${full[0] || "No encontrado"}</p>
+
+        <h3>🏝️ Mejor escapada</h3>
+        <p class="good">${best.length ? best[0]+" al "+best[best.length-1] : "No encontrada"}</p>
+
+        <h3>✅ Días completos libres</h3>
+        <p>${full.join("<br>") || "—"}</p>
+
+        <h3>🟡 Buenas ventanas</h3>
+        <p>${good.join("<br>") || "—"}</p>
+      </div>
+    `;
+  }catch(e){
+    alert(e);
+  }
+}
+</script>
+
+</body>
+</html>
